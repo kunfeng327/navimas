@@ -13,6 +13,32 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
+// ---------- .env 支持 ----------
+
+// loadEnvFile 在启动时读取 backend/.env（若存在），把 KEY=VALUE 注入环境变量。
+// 已存在的环境变量优先，不会被 .env 覆盖。
+func loadEnvFile() {
+	data, err := os.ReadFile(".env")
+	if err != nil {
+		return
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		k, v, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		k, v = strings.TrimSpace(k), strings.TrimSpace(v)
+		v = strings.Trim(v, `"'`)
+		if os.Getenv(k) == "" {
+			os.Setenv(k, v)
+		}
+	}
+}
+
 // ---------- LLM 客户端 ----------
 
 func newClient(apiKey, baseURL string) *openai.Client {
@@ -21,11 +47,23 @@ func newClient(apiKey, baseURL string) *openai.Client {
 	return openai.NewClientWithConfig(config)
 }
 
+// 文本模型与视觉模型名称：智谱走 ZHIPU_KEY 分支，否则用 DeepSeek+通义
+var (
+	textModel   = "deepseek-chat"
+	visionModel = "qwen-vl-plus"
+)
+
 func llmClients() (deepseek, qwen *openai.Client, err error) {
+	if zk := os.Getenv("ZHIPU_KEY"); zk != "" {
+		textModel = "glm-4-flash"
+		visionModel = "glm-4v-flash"
+		c := newClient(zk, "https://open.bigmodel.cn/api/paas/v4")
+		return c, c, nil
+	}
 	dk := os.Getenv("DEEPSEEK_KEY")
 	qk := os.Getenv("QWEN_KEY")
 	if dk == "" || qk == "" {
-		return nil, nil, errors.New("缺少 DEEPSEEK_KEY 或 QWEN_KEY 环境变量")
+		return nil, nil, errors.New("缺少 ZHIPU_KEY（智谱）或 DEEPSEEK_KEY+QWEN_KEY 环境变量")
 	}
 	return newClient(dk, "https://api.deepseek.com"),
 		newClient(qk, "https://dashscope.aliyuncs.com/compatible-mode/v1"),
@@ -96,7 +134,8 @@ func newSmartAgent(profile AgentProfile, client *openai.Client, model, region, c
 }
 
 // action 执行一次对话调用；isJSON 为 true 时请求 JSON 输出并清洗 Markdown 标记。
-func (a *SmartAgent) action(ctx context.Context, userPrompt string, isJSON bool) (string, error) {
+// 可选 maxTokens 限制输出长度（用于校验/规划等短输出场景，加快响应）。
+func (a *SmartAgent) action(ctx context.Context, userPrompt string, isJSON bool, maxTokens ...int) (string, error) {
 	enhancedSystem := fmt.Sprintf("%s\n【行程背景】目的地：%s；用户核心诉求：%s",
 		a.profile.systemPrompt(), a.region, a.corePrompt)
 
@@ -108,6 +147,9 @@ func (a *SmartAgent) action(ctx context.Context, userPrompt string, isJSON bool)
 		Model:       a.modelName,
 		Messages:    messages,
 		Temperature: 0.7,
+	}
+	if len(maxTokens) > 0 && maxTokens[0] > 0 {
+		req.MaxTokens = maxTokens[0]
 	}
 	if isJSON {
 		req.ResponseFormat = &openai.ChatCompletionResponseFormat{Type: openai.ChatCompletionResponseFormatTypeJSONObject}

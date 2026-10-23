@@ -327,6 +327,7 @@ func withCORS(next http.Handler) http.Handler {
 // ---------- 入口 ----------
 
 func main() {
+	loadEnvFile()
 	initDatabases()
 
 	mux := http.NewServeMux()

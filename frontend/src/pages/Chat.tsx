@@ -47,8 +47,11 @@ export default function Chat() {
   const [historyList, setHistoryList] = useState(storage.getHistory())
 
   const [region, setRegion] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  // 测试便利：日期默认为今天到 3 天后
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const threeDaysLaterStr = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10)
+  const [startDate, setStartDate] = useState(todayStr)
+  const [endDate, setEndDate] = useState(threeDaysLaterStr)
   const [people, setPeople] = useState(2)
   const [budget, setBudget] = useState(3000)
   const [requirements, setRequirements] = useState('')

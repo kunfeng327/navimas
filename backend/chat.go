@@ -106,18 +106,18 @@ func runTDAG(ctx context.Context, req chatRequest, deepseek, qwen *openai.Client
               ]
             }
             注意：没有依赖的任务 depends_on 为空列表；相互独立的任务必须并行。`,
-	}, deepseek, "deepseek-chat", req.Region, req.Prompt)
+	}, deepseek, textModel, req.Region, req.Prompt)
 
 	executor := newSmartAgent(AgentProfile{
 		fmt.Sprintf("%s资源专家", req.Region),
 		"根据目的地信息提供具体的酒店、交通和景点细节",
 		"必须包含实时估算的交通时长和门票参考。重要约束：由于你是多智能体流水线上的一个中间节点。严禁在结尾输出任何总结语、客套话、或者反问句（例如'是否需要我为您生成...'、'如果需要调整请告诉我...'、'九、总结'等）" + textBigwords,
-	}, qwen, "qwen-turbo", req.Region, req.Prompt)
+	}, qwen, textModel, req.Region, req.Prompt)
 
 	validator := newSmartAgent(AgentProfile{
 		"方案校验员", "负责检查行程的可行性（如时间冲突、路线是否绕路、预算超支）",
 		"输出JSON: {'score': 0-100, 'suggestion': '...'}",
-	}, deepseek, "deepseek-chat", req.Region, req.Prompt)
+	}, deepseek, textModel, req.Region, req.Prompt)
 
 	extractor := newSmartAgent(AgentProfile{
 		"数据结构化大师",
@@ -143,9 +143,9 @@ func runTDAG(ctx context.Context, req chatRequest, deepseek, qwen *openai.Client
             注意：
             1. 【关键】必须提取行程中的具体地点，并在 nodes 数组中输出。利用你的世界知识，给出尽可能准确的 [经度, 纬度] 数组。
             2. 只输出纯 JSON 字符串，不含任何 Markdown 标记。`,
-	}, deepseek, "deepseek-chat", req.Region, req.Prompt)
+	}, deepseek, textModel, req.Region, req.Prompt)
 
-	vision := &VisionAgent{client: qwen, modelName: "qwen-vl-plus"}
+	vision := &VisionAgent{client: qwen, modelName: visionModel}
 
 	enhancedPrompt := req.Prompt
 
@@ -182,7 +182,7 @@ func runTDAG(ctx context.Context, req chatRequest, deepseek, qwen *openai.Client
 			promptForPlanner += fmt.Sprintf(" 注意，上一次规划在节点执行时失败了，原因是：%s。请在此次规划中规避此问题。", suggestion)
 		}
 
-		rawPlan, err := planner.action(ctx, promptForPlanner, true)
+		rawPlan, err := planner.action(ctx, promptForPlanner, true, 500)
 		if err != nil {
 			events <- eventOf("error", fmt.Sprintf("系统错误: %v", err))
 			return
@@ -257,7 +257,7 @@ func runTDAG(ctx context.Context, req chatRequest, deepseek, qwen *openai.Client
 
                             给出评分（score）和建议（suggestion）。`, content)
 
-					valRaw, err := validator.action(ctx, validationPrompt, true)
+					valRaw, err := validator.action(ctx, validationPrompt, true, 200)
 					if err != nil {
 						results[i] = nodeResult{n.ID, false, "校验节点失败：" + err.Error()}
 						return
