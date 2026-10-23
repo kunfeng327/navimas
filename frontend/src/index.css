@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.5; }
+}
+.animate-fade-in-up { animation: fade-in-up 0.5s ease-out both; }
+.animate-fade-in { animation: fade-in 0.5s ease-out both; }
+.animate-pulse-dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+
+/* 日记信纸纹理 */
+.paper-texture {
+  line-height: 40px;
+  background-image: repeating-linear-gradient(transparent, transparent 39px, #d1d5db 40px);
+  background-attachment: local;
+}
+
+/* 聊天正文里的任务卡片（与后端 markdown 输出配合） */
+.markdown-body .task-header-card {
+  background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+}

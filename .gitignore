@@ -1,6 +1,25 @@
-__pycache__/
-*.db
-key.py
+# 依赖与构建产物
 node_modules/
 frontend/dist/
+backend/navimas
+backend/navimas.exe
+
+# Python 遗留
+__pycache__/
+*.pyc
+
+# 数据库（本地运行数据不入库）
+*.db
+
+# 密钥
+key.py
 .env
+frontend/.env.local
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# Go 构建产物
+backend/*.exe
+backend/navimas

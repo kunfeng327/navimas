@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/theme.tsx","./src/vite-env.d.ts","./src/components/timelinepanel.tsx","./src/pages/chat.tsx","./src/pages/diary.tsx","./src/pages/history.tsx","./src/pages/information.tsx","./src/pages/login.tsx","./src/pages/profile.tsx","./src/pages/register.tsx","./src/pages/sandbox.tsx"],"version":"5.9.3"}
