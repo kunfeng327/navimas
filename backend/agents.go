@@ -54,6 +54,7 @@ var (
 )
 
 func llmClients() (deepseek, qwen *openai.Client, err error) {
+	// 优先智谱：一个 Key 同时承担文本与视觉
 	if zk := os.Getenv("ZHIPU_KEY"); zk != "" {
 		textModel = "glm-4-flash"
 		visionModel = "glm-4v-flash"
@@ -62,12 +63,24 @@ func llmClients() (deepseek, qwen *openai.Client, err error) {
 	}
 	dk := os.Getenv("DEEPSEEK_KEY")
 	qk := os.Getenv("QWEN_KEY")
-	if dk == "" || qk == "" {
-		return nil, nil, errors.New("缺少 ZHIPU_KEY（智谱）或 DEEPSEEK_KEY+QWEN_KEY 环境变量")
+	dsClient := newClient(dk, "https://api.deepseek.com")
+	qwClient := newClient(qk, "https://dashscope.aliyuncs.com/compatible-mode/v1")
+	switch {
+	case dk != "" && qk != "":
+		// 双模型分工：DeepSeek 规划/校验，Qwen 执行/识图
+	case dk != "":
+		// 只填 DeepSeek：全部走 DeepSeek（无视觉能力，传图会降级为纯文本）
+		textModel = "deepseek-chat"
+		qwClient = dsClient
+	case qk != "":
+		// 只填通义：全部走通义
+		textModel = "qwen-turbo"
+		visionModel = "qwen-vl-plus"
+		dsClient = qwClient
+	default:
+		return nil, nil, errors.New("请在 backend/.env 中填写 ZHIPU_KEY，或 DEEPSEEK_KEY / QWEN_KEY（至少一个）")
 	}
-	return newClient(dk, "https://api.deepseek.com"),
-		newClient(qk, "https://dashscope.aliyuncs.com/compatible-mode/v1"),
-		nil
+	return dsClient, qwClient, nil
 }
 
 // ---------- Agent Profile / Memory ----------
