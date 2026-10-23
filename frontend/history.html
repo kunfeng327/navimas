@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对话历史档案 - NaviMAS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .prose pre { background-color: #f8fafc; padding: 1em; border-radius: 0.75em; border: 1px solid #e2e8f0; }
+        .prose h3 { font-size: 1.1rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col font-sans">
+
+    <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-box-archive text-emerald-500 text-xl"></i>
+            <h1 class="text-lg font-bold text-gray-800 tracking-wide">行程对话档案库</h1>
+        </div>
+        <button onclick="window.close()" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6 md:p-10">
+        <div id="chat-history-container" class="max-w-4xl mx-auto space-y-6">
+            <div id="loading-spinner" class="flex flex-col items-center justify-center mt-20 text-emerald-500">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
+                <p class="text-sm text-gray-500">正在从数据库检索历史档案...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 后端 API 基础路径（优先使用 frontend/config.js 中的 window.ENV.API_BASE）
+        const __API_BASE__ = (window.ENV && typeof window.ENV.API_BASE === 'string') ? window.ENV.API_BASE.replace(/\/$/, '') : '';
+        function buildApi(path) {
+            return (__API_BASE__ ? __API_BASE__ : '') + path;
+        }
+        // 1. 从浏览器地址栏提取 session_id 参数 (例如 history.html?session=trip_123)
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session');
+        const container = document.getElementById('chat-history-container');
+
+        // 2. 向后端请求数据
+        async function fetchHistory() {
+            if (!sessionId) {
+                showError("无效的访问：缺少会话 ID。");
+                return;
+            }
+
+            try {
+                // 访问后端接口（支持相对或配置的完整域名）
+                const response = await fetch(buildApi(`/api/history/${sessionId}`));
+                if (!response.ok) throw new Error("数据库读取失败");
+
+                const data = await response.json(); // 拿到一个数组 [{role, content, time}, ...]
+
+                document.getElementById('loading-spinner').style.display = 'none';
+
+                if (data.length === 0) {
+                    showError("数据库中未找到该记录，可能已被清空。");
+                    return;
+                }
+
+                // 3. 循环遍历渲染聊天气泡
+                data.forEach(msg => {
+                    const timeStr = new Date(msg.time).toLocaleString(); // 格式化时间
+
+                    if (msg.role === 'user') {
+                        renderUserBubble(msg.content, timeStr);
+                    } else if (msg.role === 'ai') {
+                        renderAIBubble(msg.content, timeStr);
+                    }
+                });
+
+            } catch (error) {
+                console.error(error);
+                showError("无法连接到后端数据库，请确保系统已启动。");
+            }
+        }
+
+        // 渲染用户的绿色气泡 (右侧)
+        function renderUserBubble(text, time) {
+            container.innerHTML += `
+                <div class="flex justify-end w-full animate-fade-in">
+                    <div class="flex flex-col items-end max-w-2xl">
+                        <span class="text-[10px] text-gray-400 mb-1 mr-1">${time}</span>
+                        <div class="bg-emerald-500 text-white px-6 py-4 rounded-2xl rounded-tr-none shadow-md text-sm leading-relaxed whitespace-pre-wrap">
+                            ${text}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染 AI 的报告气泡 (左侧，带 Markdown 解析)
+        function renderAIBubble(text, time) {
+            container.innerHTML += `
+                <div class="flex justify-start w-full mt-4 animate-fade-in">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mr-3 flex-shrink-0 mt-4 border border-emerald-200">
+                        <i class="fa-solid fa-robot text-emerald-600"></i>
+                    </div>
+                    <div class="flex flex-col items-start max-w-3xl">
+                        <span class="text-[10px] text-gray-400 mb-1 ml-1">${time}</span>
+                        <div class="bg-white border border-gray-200 px-6 py-5 rounded-2xl rounded-tl-none shadow-sm text-sm text-gray-700 prose prose-emerald max-w-none">
+                            ${marked.parse(text)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(msg) {
+            document.getElementById('loading-spinner').style.display = 'none';
+            container.innerHTML = `
+                <div class="bg-red-50 text-red-500 p-4 rounded-xl text-center border border-red-100 mt-10">
+                    <i class="fa-solid fa-triangle-exclamation mr-2"></i> ${msg}
+                </div>
+            `;
+        }
+
+        // 页面加载完毕后立即触发请求
+        window.onload = fetchHistory;
+    </script>
+</body>
+</html>

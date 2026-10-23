@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - NaviMAS 智游图谱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+
+    <style>
+        .fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* 视频背景样式 */
+        #video-background {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -100;
+            object-fit: cover;
+        }
+
+        /* 覆盖一层半透明蒙版，确保文字清晰 */
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: -99;
+        }
+
+        .dark .video-overlay {
+            background: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 h-screen flex items-center justify-center font-sans transition-colors duration-300 relative overflow-hidden">
+
+    <video autoplay muted loop playsinline id="video-background">
+        <source src="loginVideo.mp4" type="video/mp4">
+        您的浏览器不支持 HTML5 视频。
+    </video>
+
+    <div class="video-overlay"></div>
+
+    <button onclick="toggleTheme()" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md dark:bg-gray-800/40 border border-white/30 dark:border-gray-700 text-white dark:text-gray-400 hover:bg-white/30 shadow-sm transition-all duration-300 z-50 focus:outline-none active:scale-95">
+        <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+    </button>
+
+    <div class="w-full max-w-md px-6 relative z-10 fade-in-up">
+
+        <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/30 p-8 sm:p-10 overflow-hidden relative">
+
+            <div class="text-center mb-8 relative z-10">
+                <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-5 transform transition-transform hover:scale-105">
+                    <i class="fa-solid fa-user-plus text-2xl text-white"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 tracking-wide mb-2">创建新档案</h1>
+                <p class="text-xs text-gray-600 dark:text-gray-300 font-medium">加入 NaviMAS 智游系统</p>
+            </div>
+
+            <form id="register-form" class="space-y-5 relative z-10" onsubmit="handleRegister(event)">
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">创建账号</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                        </div>
+                        <input type="text" id="reg-username" required
+                            class="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-sm"
+                            placeholder="设置您的账号">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">输入密码</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                        </div>
+                        <input type="password" id="reg-password" required
+                            class="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-sm"
+                            placeholder="设置您的密码">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">确认密码</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-shield-check text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                        </div>
+                        <input type="password" id="reg-confirm-password" required
+                            class="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-sm"
+                            placeholder="请再次输入密码">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">验证码</label>
+                    <div class="flex space-x-3">
+                        <div class="relative group flex-1">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-barcode text-gray-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                            </div>
+                            <input type="text" id="reg-captcha" required autocomplete="off"
+                                class="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-sm"
+                                placeholder="输入右侧验证码">
+                        </div>
+                        <div class="w-28 h-[46px] rounded-xl overflow-hidden cursor-pointer border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-900/50 flex-shrink-0 shadow-sm" onclick="generateCaptcha()" title="点击刷新验证码">
+                            <canvas id="captcha-canvas" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" id="reg-btn" class="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all active:scale-[0.98] flex justify-center items-center group">
+                        <span id="reg-btn-text">注册并创建档案</span>
+                        <i id="reg-btn-icon" class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        <i id="reg-btn-spinner" class="fa-solid fa-circle-notch fa-spin ml-2 hidden"></i>
+                    </button>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="login.html" class="text-xs text-white/80 dark:text-gray-400 hover:text-white dark:hover:text-emerald-400 font-medium transition-colors drop-shadow-md">
+                        已有账号？返回登录
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        // ================= 新增：图形验证码全局变量与生成逻辑 =================
+        // 后端 API 基础路径（优先使用 frontend/config.js 中的 window.ENV.API_BASE）
+        const __API_BASE__ = (window.ENV && typeof window.ENV.API_BASE === 'string') ? window.ENV.API_BASE.replace(/\/$/, '') : '';
+        function buildApi(path) { return (__API_BASE__ ? __API_BASE__ : '') + path; }
+        let currentCaptchaCode = '';
+
+        function generateCaptcha() {
+            const canvas = document.getElementById('captcha-canvas');
+            const ctx = canvas.getContext('2d');
+            // 设置内部绘图分辨率，确保清晰
+            canvas.width = 112;
+            canvas.height = 46;
+
+            // 清空画布并根据暗黑/白天模式填充背景
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.fillStyle = isDark ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 随机生成 4 位字符 (去除了容易混淆的 o/0, i/1/l)
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            let captcha = '';
+            for (let i = 0; i < 4; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            currentCaptchaCode = captcha.toLowerCase(); // 统一转为小写以便不区分大小写校验
+
+            // 绘制干扰线
+            for(let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            // 绘制文字
+            const textColor = isDark ? '#10b981' : '#059669'; // 使用与主题匹配的翡翠绿
+            for (let i = 0; i < captcha.length; i++) {
+                ctx.save();
+                ctx.font = 'bold 24px Arial';
+                ctx.fillStyle = textColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // 给每个字符加点随机旋转
+                const x = 20 + i * 24;
+                const y = canvas.height / 2;
+                ctx.translate(x, y);
+                const angle = (Math.random() - 0.5) * 0.5; // -0.25 到 0.25 弧度
+                ctx.rotate(angle);
+                ctx.fillText(captcha[i], 0, 0);
+                ctx.restore();
+            }
+        }
+
+        // 页面加载完成后初始化验证码
+        window.addEventListener('DOMContentLoaded', generateCaptcha);
+        // ======================================================================
+
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.classList.remove('fa-sun', 'text-amber-400');
+                icon.classList.add('fa-moon', 'text-gray-500');
+            } else {
+                html.classList.add('dark');
+                icon.classList.remove('fa-moon', 'text-gray-500');
+                icon.classList.add('fa-sun', 'text-amber-400');
+            }
+            // 切换主题时重绘验证码以适应新的颜色
+            setTimeout(generateCaptcha, 10);
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+
+            // ================= 新增：验证码校验逻辑 =================
+            const userInputCaptcha = document.getElementById('reg-captcha').value.toLowerCase().trim();
+            if (userInputCaptcha !== currentCaptchaCode) {
+                alert("验证码输入错误，请重新输入！");
+                document.getElementById('reg-captcha').value = ''; // 清空输入框
+                generateCaptcha(); // 自动刷新验证码
+                document.getElementById('reg-captcha').focus();
+                return;
+            }
+            // ========================================================
+
+            if (password !== confirmPassword) {
+                alert("两次输入的密码不一致，请重新输入！");
+                return;
+            }
+
+            const btn = document.getElementById('reg-btn');
+            const btnText = document.getElementById('reg-btn-text');
+            const btnIcon = document.getElementById('reg-btn-icon');
+            const btnSpinner = document.getElementById('reg-btn-spinner');
+
+            btn.classList.add('opacity-90', 'cursor-not-allowed');
+            btn.disabled = true;
+            btnText.innerText = '正在写入数据库...';
+            btnIcon.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+
+            try {
+                const response = await fetch(buildApi('/api/register'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username, password: password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    btnText.innerText = '注册成功！正在跳转...';
+                    btnSpinner.classList.remove('fa-circle-notch', 'fa-spin');
+                    btnSpinner.classList.add('fa-check');
+
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1000);
+                } else {
+                    alert("注册失败：" + result.detail);
+                    resetButtonState();
+                    generateCaptcha(); // 失败后也刷新验证码
+                }
+            } catch (error) {
+                console.error("注册请求失败:", error);
+                alert("无法连接到后端服务器，请检查 FastAPI 服务是否运行。");
+                resetButtonState();
+                generateCaptcha(); // 失败后也刷新验证码
+            }
+
+            function resetButtonState() {
+                btn.classList.remove('opacity-90', 'cursor-not-allowed');
+                btn.disabled = false;
+                btnText.innerText = '注册并创建档案';
+                btnIcon.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+                document.getElementById('reg-captcha').value = ''; // 恢复状态时清空验证码
+            }
+        }
+    </script>
+</body>
+</html>
